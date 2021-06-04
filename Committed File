@@ -1,0 +1,141 @@
+import pygame
+from pygame.locals import QUIT
+import time
+from datetime import datetime
+import random
+
+# Initalizing Modules
+pygame.init()
+pygame.font.init()
+screen = pygame.display.set_mode((700, 600))
+pygame.display.set_caption('Snake')
+random.seed(datetime.now())
+
+
+class Head(pygame.sprite.Sprite):
+    def __init__(self, x, y, speed, direction):
+        super(Head, self).__init__()
+        self.x = x
+        self.y = y
+        self.speed = speed
+        self.direction = direction
+
+    def render_head(self, x, y):
+        head_rect = pygame.draw.rect(screen, (255, 255, 0), (x, y, 20, 20))
+        return head_rect
+
+    def up(self):
+        self.y = self.y - self.speed
+        return self.y
+
+    def down(self):
+        self.y = self.y + self.speed
+        return self.y
+
+    def left(self):
+        self.x = self.x - self.speed
+        return self.x
+
+    def right(self):
+        self.x = self.x + self.speed
+        return self.x
+
+
+# Function for Drawing Segments
+def render_segment(x, y):
+    segment_rect = pygame.draw.rect(screen, (255, 255, 0), (x, y, 20, 20))
+    return segment_rect
+
+
+# Function for Drawing Food
+def render_food(x, y):
+    food_rect = pygame.draw.rect(screen, (0, 128, 0), (foodX, foodY, 20, 20))
+    return food_rect
+
+
+# Variable Initalizing
+running = True
+headX = 350
+headY = 300
+direction = 'up'
+length = 1
+ate_food = True
+dead = False
+
+for i in range(10):
+    foodX = round(random.randint(20, 680) / 20) * 20
+    foodY = round(random.randint(20, 580) / 20) * 20
+
+render_food(foodX, foodY)
+storage_list = []
+head = Head(360, 300, 20, direction)
+
+while running:
+    # When Pygame Quit
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            running = False
+
+    # When Key Pressed, Direction gets Changed
+    keys_pressed = pygame.key.get_pressed()
+
+    if (keys_pressed[pygame.K_UP] or keys_pressed[pygame.K_w]):
+        direction = 'up'
+
+    if (keys_pressed[pygame.K_DOWN] or keys_pressed[pygame.K_s]):
+        direction = 'down'
+
+    if (keys_pressed[pygame.K_LEFT] or keys_pressed[pygame.K_a]):
+        direction = 'left'
+
+    if (keys_pressed[pygame.K_RIGHT] or keys_pressed[pygame.K_d]):
+        direction = 'right'
+
+    # Filling the Screen White
+    screen.fill((255, 255, 255))
+
+    # Going in the Direction the Snake is Facing
+    if direction == 'up':
+        headY = head.up()
+    if direction == 'down':
+        headY = head.down()
+    if direction == 'left':
+        headX = head.left()
+    if direction == 'right':
+        headX = head.right()
+
+    # Creating the Snake
+    storage_list.insert(0, (round(headX), round(headY)))
+    if len(storage_list) > length:
+        storage_list.pop(-1)
+
+    # Rendering all the Segments from the Storage List
+    for i in range(len(storage_list)):
+        render_segment(storage_list[i][0], storage_list[i][1])
+
+    # When the Snake eats Food
+    if headX == foodX and headY == foodY:
+        ate_food = True
+        for i in range(10):
+            foodX = round(random.randint(20, 680) / 20) * 20
+            foodY = round(random.randint(20, 580) / 20) * 20
+        render_food(foodX, foodY)
+        length = length + 1
+
+    # Code for Collision with body
+    for i in range(len(storage_list) - 1):
+        i = i + 1
+        if headX == storage_list[i][0] and headY == storage_list[i][1]:
+            print('You Died :(')
+            running = False
+    # Code for collision with wall
+    if headX > 680 or headX < 0 or headY > 580 or headY < 0:
+        print('You Died :(')
+        running = False
+
+    render_food(foodX, foodY)
+
+    pygame.display.flip()
+    time.sleep(0.1)
+
+pygame.quit()
